@@ -333,17 +333,17 @@ def print_moore(output_filename, transitions, outputs, states, input_symbols):
 
 
 def main():
-    # if len(sys.argv) != 4:
-    #     print("Использование:")
-    #     print("Для преобразования из Mealy в Moore:")
-    #     print("    program mealy-to-moore mealy.csv moore.csv")
-    #     print("Для преобразования из Moore в Mealy:")
-    #     print("    program moore-to-mealy moore.csv mealy.csv")
-    #     sys.exit(1)
+    if len(sys.argv) != 4:
+        print("Использование:")
+        print("Для минимизации Mealy:")
+        print("    program mealy mealy.csv output.csv")
+        print("Для минимизации Moore:")
+        print("    program moore moore.csv output.csv.csv")
+        sys.exit(1)
 
-    command = "mealy"
-    input_file = "1_mealy.csv"
-    output_file = "output.csv"
+    command = sys.argv[1]
+    input_file = sys.argv[2]
+    output_file = sys.argv[3]
 
     if command == "mealy":
         minimize_mealy(input_file, output_file)
@@ -351,7 +351,7 @@ def main():
         minimize_moore(input_file, output_file)
     else:
         print(f"Неизвестная команда: {command}")
-        print("Допустимые команды: 'mealy-to-moore' или 'moore-to-mealy'")
+        print("Допустимые команды: 'mealy' или 'moore'")
         sys.exit(1)
 
 
