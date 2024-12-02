@@ -128,7 +128,8 @@ def build_minimized_moore(transitions, outputs, new_groups_map):
         new_transitions[z] = new_state_map
 
     for state, output in outputs.items():
-        new_outputs[new_groups_map[state]] = output
+        if state in new_groups_map.keys():
+            new_outputs[new_groups_map[state]] = output
 
     return new_transitions, new_outputs
 
