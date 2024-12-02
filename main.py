@@ -103,9 +103,9 @@ def minimize_moore(moore_filename, output_filename):
                 transitions_to_group[unique_key] = new_group_name
                 new_groups_map[state] = new_group_name
 
-        groups_map = new_groups_map
         if len(set(groups_map.values())) != len(set(new_groups_map.values())):
             is_changed = True
+            groups_map = new_groups_map
         else:
             transitions, outputs = build_minimized_moore(transitions, outputs, new_groups_map)
 
@@ -184,9 +184,9 @@ def minimize_mealy(mealy_filename, output_filename):
                 transitions_to_group[unique_key] = new_group_name
                 new_groups_map[state] = new_group_name
 
-        groups_map = new_groups_map
         if len(set(groups_map.values())) != len(set(new_groups_map.values())):
             is_changed = True
+            groups_map = new_groups_map
         else:
             transitions, states = build_minimized_mealy(transitions, new_groups_map)
 
