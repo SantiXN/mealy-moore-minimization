@@ -24,41 +24,6 @@ def read_mealy(mealy_filename):
     return transitions, states, input_symbols
 
 
-def mealy_to_moore(mealy_filename, output_filename):
-    transitions, states, input_symbols = read_mealy(mealy_filename)
-    transitions, states = remove_unreachable_states_mealy(transitions, states, input_symbols)
-    moore_transitions = {}
-    old_to_new = extract_unique_sorted_tuples(transitions, states[0])
-
-    for input_symbol in input_symbols:
-        moore_transitions[input_symbol] = {}
-        for old, new in old_to_new.items():
-            state, output = old
-            tuple = transitions[input_symbol][state]
-            new_state = old_to_new[tuple]
-            moore_transitions[input_symbol][new] = new_state
-
-    outputs = {v: k[1] for k, v in old_to_new.items()}
-
-    states = list(outputs.keys())
-    print_moore(output_filename, moore_transitions, outputs, states, input_symbols)
-    return moore_transitions, outputs, states, input_symbols
-
-
-def moore_to_mealy(moore_filename, output_filename):
-    transitions, outputs, states, input_symbols = read_moore(moore_filename)
-    transitions, states = remove_unreachable_states_moore(transitions, states, input_symbols)
-    mealy_transitions = {}
-
-    for input_symbol in input_symbols:
-        mealy_transitions[input_symbol] = {}
-        for state in states:
-            mealy_transitions[input_symbol][state] = (
-            transitions[input_symbol][state], outputs[transitions[input_symbol][state]])
-    print_mealy(output_filename, mealy_transitions, states, input_symbols)
-    return mealy_transitions, states, input_symbols
-
-
 def minimize_moore(moore_filename, output_filename):
     transitions, outputs, states, input_symbols = read_moore(moore_filename)
     transitions, states = remove_unreachable_states_moore(transitions, states, input_symbols)
@@ -76,7 +41,6 @@ def minimize_moore(moore_filename, output_filename):
     is_changed = True
     while is_changed:
         is_changed = False
-        new_groups_map = {}
         state_to_transitions = {}
 
         for state in states:
@@ -87,21 +51,7 @@ def minimize_moore(moore_filename, output_filename):
                     state_to_transitions[state] = []
                 state_to_transitions[state].append(to_group)
 
-        transitions_to_group = {}
-        for state, ts in state_to_transitions.items():
-            group = groups_map[state]
-
-            transitions_key = tuple(ts)
-
-            unique_key = (transitions_key, group)
-
-            if unique_key in transitions_to_group:
-                existing_group = transitions_to_group[unique_key]
-                new_groups_map[state] = existing_group
-            else:
-                new_group_name = f'a{len(transitions_to_group) + 1}'
-                transitions_to_group[unique_key] = new_group_name
-                new_groups_map[state] = new_group_name
+        new_groups_map = create_new_groups(state_to_transitions, groups_map)
 
         if len(set(groups_map.values())) != len(set(new_groups_map.values())):
             is_changed = True
@@ -158,7 +108,6 @@ def minimize_mealy(mealy_filename, output_filename):
     is_changed = True
     while is_changed:
         is_changed = False
-        new_groups_map = {}
         state_to_transitions = {}
 
         for state in states:
@@ -169,21 +118,7 @@ def minimize_mealy(mealy_filename, output_filename):
                     state_to_transitions[state] = []
                 state_to_transitions[state].append(to_group)
 
-        transitions_to_group = {}
-        for state, ts in state_to_transitions.items():
-            group = groups_map[state]
-
-            transitions_key = tuple(ts)
-
-            unique_key = (transitions_key, group)
-
-            if unique_key in transitions_to_group:
-                existing_group = transitions_to_group[unique_key]
-                new_groups_map[state] = existing_group
-            else:
-                new_group_name = f'a{len(transitions_to_group) + 1}'
-                transitions_to_group[unique_key] = new_group_name
-                new_groups_map[state] = new_group_name
+        new_groups_map = create_new_groups(state_to_transitions, groups_map)
 
         if len(set(groups_map.values())) != len(set(new_groups_map.values())):
             is_changed = True
@@ -210,6 +145,26 @@ def build_minimized_mealy(transitions, new_groups_map):
 
     return new_transitions, list(set(new_groups_map.values()))
 
+
+def create_new_groups(state_to_transitions, groups_map):
+    transitions_to_group = {}
+    new_groups_map = {}
+    for state, ts in state_to_transitions.items():
+        group = groups_map[state]
+
+        transitions_key = tuple(ts)
+
+        unique_key = (transitions_key, group)
+
+        if unique_key in transitions_to_group:
+            existing_group = transitions_to_group[unique_key]
+            new_groups_map[state] = existing_group
+        else:
+            new_group_name = f'a{len(transitions_to_group) + 1}'
+            transitions_to_group[unique_key] = new_group_name
+            new_groups_map[state] = new_group_name
+
+    return new_groups_map
 
 def remove_unreachable_states_mealy(transitions, states, input_symbols):
     reachable_states = set()
@@ -258,27 +213,8 @@ def remove_unreachable_states_moore(transitions, states, input_symbols):
     return transitions, states
 
 
-def extract_unique_sorted_tuples(data, start):
-    unique_tuples = set()
-    for input_symbol, state_transitions in data.items():
-        for state, (next_state, output) in state_transitions.items():
-            unique_tuples.add((next_state, output))
-
-    if not any(start == item[0] for item in unique_tuples):
-        unique_tuples.add((start, ""))
-    sorted_unique_tuples = sorted(unique_tuples)
-    old_to_new = {}
-
-    for idx, state_tuple in enumerate(sorted_unique_tuples):
-        new_name = f'q{idx}'
-        old_to_new[state_tuple] = new_name
-
-    return old_to_new
-
-
 def read_moore(moore_filename):
     transitions = {}
-    states = []
     input_symbols = []
     outputs = {}
 
